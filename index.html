@@ -199,8 +199,12 @@ f.addEventListener('submit',async e=>{
   e.preventDefault();const b=f.querySelector('button');const d=Object.fromEntries(new FormData(f));
   if(!d.name||!/^\S+@\S+\.\S+$/.test(d.email||'')||!d.message){m.style.color='#ff8a8a';m.textContent='Please fill name, a valid email and message.';return}
   b.disabled=true;b.textContent='Sending…';m.textContent='';
-  try{const r=await fetch((window.CB_API||'')+'/api/contact',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});const j=await r.json();
-    if(!r.ok)throw new Error(j.error||'Failed');m.style.color='#5dffb0';m.textContent='✓ Thank you! We will contact you shortly.';f.reset()}
+  try{
+    let r;
+    if(window.CB_API){r=await fetch(window.CB_API+'/api/contact',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)})}
+    else{r=await fetch('https://formsubmit.co/ajax/enquiry@cortexbleu.com',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({name:d.name,email:d.email,phone:d.phone,message:d.message,_subject:'New enquiry from '+d.name,_template:'table',_captcha:'false'})})}
+    let j={};try{j=await r.json()}catch(_){}
+    if(!r.ok||j.success==='false')throw new Error(j.error||j.message||'Failed');m.style.color='#5dffb0';m.textContent='✓ Thank you! We will contact you shortly.';f.reset()}
   catch(err){m.style.color='#ff8a8a';m.textContent=err.message||'Could not send. Please email us directly.'}
   b.disabled=false;b.textContent='Send Message';
 });
